@@ -52,13 +52,13 @@ export default function App() {
         // Determine active navigation section
         if (currentProgress < 0.12) {
           setActiveSection('hero');
-        } else if (currentProgress >= 0.12 && currentProgress < 0.52) {
+        } else if (currentProgress >= 0.12 && currentProgress < 0.50) {
           setActiveSection('timeline');
-        } else if (currentProgress >= 0.52 && currentProgress < 0.68) {
+        } else if (currentProgress >= 0.50 && currentProgress < 0.68) {
           setActiveSection('residences');
-        } else if (currentProgress >= 0.68 && currentProgress < 0.84) {
+        } else if (currentProgress >= 0.68 && currentProgress < 0.82) {
           setActiveSection('neighborhood');
-        } else if (currentProgress >= 0.84 && currentProgress < 0.93) {
+        } else if (currentProgress >= 0.82 && currentProgress < 0.92) {
           setActiveSection('track-record');
         } else {
           setActiveSection('contact');
@@ -101,10 +101,10 @@ export default function App() {
         jumpToProgress(0.74);
         break;
       case 'track-record':
-        jumpToProgress(0.87);
+        jumpToProgress(0.86);
         break;
       case 'contact':
-        jumpToProgress(0.98);
+        jumpToProgress(0.96);
         break;
       default:
         jumpToProgress(0.0);
@@ -133,7 +133,7 @@ export default function App() {
       {/* Crane-Height Elevation Ruler */}
       <CraneRuler scrollProgress={scrollProgress} onJumpToProgress={jumpToProgress} />
 
-      {/* Persistent 3D Three.js Canvas Scene */}
+      {/* Persistent 3D Three.js Canvas Scene: visible 100% of the time */}
       <ThreeScene
         scrollProgress={scrollProgress}
         activeProjectId={activeProjectId}
@@ -142,7 +142,7 @@ export default function App() {
         isExplodedView={isExplodedView}
         onBuildingSelect={(id) => {
           setActiveProjectId(id);
-          if (scrollProgress < 0.52 || scrollProgress > 0.68) {
+          if (scrollProgress < 0.50 || scrollProgress > 0.68) {
             jumpToProgress(0.58);
           }
         }}
@@ -157,13 +157,13 @@ export default function App() {
         onWatchItRise={() => jumpToProgress(0.22)}
       />
 
-      {/* Signature Build Sequence Captions Overlay (12% to 52%) */}
+      {/* Signature Build Sequence Captions Overlay (12% to 50%) */}
       <BuildSequenceCaptions
         scrollProgress={scrollProgress}
         onSelectPhase={handleSelectPhase}
       />
 
-      {/* Residences & Exploded Tower Overlay (52% to 68%) */}
+      {/* Residences & Exploded Tower Overlay (50% to 68%) */}
       <ResidencesOverlay
         scrollProgress={scrollProgress}
         activeProjectId={activeProjectId}
@@ -172,31 +172,26 @@ export default function App() {
         onSelectProject={setActiveProjectId}
         onToggleExploded={setIsExplodedView}
         onHoverFloor={setHoveredFloorIndex}
-        onScheduleTour={() => jumpToProgress(0.98)}
+        onScheduleTour={() => jumpToProgress(0.96)}
       />
 
-      {/* Neighborhood District HUD Overlay (68% to 84%) */}
+      {/* Neighborhood District HUD Overlay (68% to 82%) */}
       <NeighborhoodOverlay
         scrollProgress={scrollProgress}
         activePinId={activePinId}
         onSelectPin={setActivePinId}
-        onScheduleVisit={() => jumpToProgress(0.98)}
+        onScheduleVisit={() => jumpToProgress(0.96)}
       />
 
-      {/* Scroll track driving the pinned 3D cinematic time-lapse (~500vh) */}
+      {/* Track Record / Delivery Ledger Glass Overlay (82% to 92%) */}
+      <TrackRecordSection isVisible={scrollProgress >= 0.81 && scrollProgress < 0.92} />
+
+      {/* Private Gallery Inquiry Glass Overlay (91% to 100%) */}
+      <ContactSection isVisible={scrollProgress >= 0.91} />
+
+      {/* Unified 3D Continuous Scroll Track (600vh) */}
       <div ref={scrollContainerRef} className="relative z-10 pointer-events-none">
-        {/* Pinned 3D Sequence spacer (~420vh) */}
-        <div className="h-[420vh] w-full" />
-
-        {/* 2D Breathing Space: Track Record Section */}
-        <div className="pointer-events-auto">
-          <TrackRecordSection isVisible={scrollProgress >= 0.80} />
-        </div>
-
-        {/* Contact Section: Blue Hour Skyline & Inquiry Form */}
-        <div className="pointer-events-auto">
-          <ContactSection />
-        </div>
+        <div className="h-[600vh] w-full" />
       </div>
     </div>
   );
