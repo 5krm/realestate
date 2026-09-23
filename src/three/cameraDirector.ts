@@ -26,9 +26,10 @@ export interface CameraContext {
  * section switches into smooth crane moves.
  */
 export class CameraDirector {
-  private pos = new THREE.Vector3(150, 80, 165);
-  private look = new THREE.Vector3(0, 25, 0);
-  private fov = 44;
+  // seed = exact hero-frame goal (no opening swoop)
+  private pos = new THREE.Vector3(-153, 95, -83);
+  private look = new THREE.Vector3(0, 26, -6);
+  private fov = 46;
   private goalPos = new THREE.Vector3();
   private goalLook = new THREE.Vector3();
   private goalFov = 44;

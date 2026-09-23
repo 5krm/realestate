@@ -89,8 +89,9 @@ export class SceneEngine {
     this.renderer.domElement.style.display = 'block';
     container.appendChild(this.renderer.domElement);
 
-    this.camera = new THREE.PerspectiveCamera(44, w / h, 0.5, 1400);
-    this.camera.position.set(150, 80, 165);
+    this.camera = new THREE.PerspectiveCamera(46, w / h, 0.5, 1400);
+    this.camera.position.set(-153, 95, -83);
+    this.camera.lookAt(0, 26, -6);
 
     this.scene.fog = new THREE.FogExp2(0xdce7ee, 0.0016);
 
@@ -229,10 +230,11 @@ export class SceneEngine {
       this.route = null;
       return;
     }
-    const from = new THREE.Vector3(proj.anchor[0], 2, proj.anchor[1]);
-    const to = new THREE.Vector3(pin.coordinates[0], 2, pin.coordinates[1]);
-    const mid1 = from.clone().lerp(to, 0.33).add(new THREE.Vector3(0, 7, 0));
-    const mid2 = from.clone().lerp(to, 0.66).add(new THREE.Vector3(0, 5, 0));
+    const from = new THREE.Vector3(proj.anchor[0], 3, proj.anchor[1]);
+    const to = new THREE.Vector3(pin.coordinates[0], 3, pin.coordinates[1]);
+    // arc high over rooflines — reads as a rail ribbon in the sky
+    const mid1 = from.clone().lerp(to, 0.33).add(new THREE.Vector3(0, 26, 0));
+    const mid2 = from.clone().lerp(to, 0.66).add(new THREE.Vector3(0, 22, 0));
     const curve = new THREE.CatmullRomCurve3([from, mid1, mid2, to]);
     const geo = new THREE.TubeGeometry(curve, 72, 0.4, 6, false);
     const mat = new THREE.ShaderMaterial({

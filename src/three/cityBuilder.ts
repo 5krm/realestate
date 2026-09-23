@@ -157,6 +157,8 @@ export function buildCity(scene: THREE.Scene): CityHandles {
       const z = bz + (rng() - 0.5) * 5;
       if (Math.abs(z - CANAL_Z) < 22) continue;
       if (Math.abs(z + 8) < STREET_HALF + 4) continue;
+      if (Math.abs(z + 58) < 9) continue; // boulevard row
+      if (Math.abs(Math.abs(x) - 58) < 9.5) continue; // NS avenues
       if (nearHero(x, z)) continue;
       if (inPark(x, z)) continue;
 
@@ -510,6 +512,53 @@ export function buildCity(scene: THREE.Scene): CityHandles {
     cranes.push({ root, slew, trolley, hook, cable, beaconMat: beaconMatl, phase: ci * 2.1, doneAt: cs.doneAt, dead: false });
   });
 
+  // ---------- ground-works site kit (visible before construction starts) ----------
+  // excavation pits, retaining edges, site trailers, dirt mounds, safety fence
+  const pitMat = new THREE.MeshStandardMaterial({ color: 0x4a4238, roughness: 1 });
+  const dirtMat = new THREE.MeshStandardMaterial({ color: 0x8a7458, roughness: 1 });
+  const trailerMat = new THREE.MeshStandardMaterial({ color: 0xe8e6e0, roughness: 0.6 });
+  const fenceMat = new THREE.MeshStandardMaterial({ color: 0xe65100, roughness: 0.7 });
+  const siteKit = new THREE.Group();
+  HERO_ANCHORS.forEach(([hx, hz]) => {
+    // excavation pit + rim
+    const pit = new THREE.Mesh(new THREE.BoxGeometry(24, 0.6, 24), pitMat);
+    pit.position.set(hx, 0.28, hz);
+    siteKit.add(pit);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(26, 0.5, 26), dirtMat);
+    rim.position.set(hx, 0.1, hz);
+    siteKit.add(rim);
+    // dirt mounds
+    for (let m = 0; m < 3; m++) {
+      const mound = new THREE.Mesh(new THREE.ConeGeometry(2.4 + rng() * 1.6, 2.2 + rng() * 1.4, 7), dirtMat);
+      mound.position.set(hx + 16 + rng() * 6, 1, hz - 10 + rng() * 20);
+      mound.castShadow = true;
+      siteKit.add(mound);
+    }
+  });
+  // site cabins row
+  for (let t = 0; t < 4; t++) {
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(6, 2.6, 2.6), trailerMat);
+    cabin.position.set(-14 + t * 7, 1.3, 19);
+    cabin.castShadow = true;
+    siteKit.add(cabin);
+  }
+  // safety fence along the south district boundary
+  const fenceParts: THREE.BufferGeometry[] = [];
+  for (let x = -66; x <= 24; x += 5) {
+    const post = new THREE.BoxGeometry(0.12, 1.1, 0.12);
+    post.translate(x, 0.55, -52);
+    fenceParts.push(post);
+  }
+  const rail = new THREE.BoxGeometry(92, 0.08, 0.08);
+  rail.translate(-21, 1.0, -52);
+  fenceParts.push(rail);
+  const rail2 = new THREE.BoxGeometry(92, 0.08, 0.08);
+  rail2.translate(-21, 0.45, -52);
+  fenceParts.push(rail2);
+  const fenceMesh = new THREE.Mesh(mergeGeometries(fenceParts)!, fenceMat);
+  siteKit.add(fenceMesh);
+  scene.add(siteKit);
+
   // ---------- construction dust particles ----------
   const DUST_COUNT = 260;
   const dustPos = new Float32Array(DUST_COUNT * 3);
@@ -662,6 +711,15 @@ export function buildCity(scene: THREE.Scene): CityHandles {
       }
       acMesh.instanceMatrix.needsUpdate = true;
       tankMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // --- ground-works kit sinks away as the towers start rising ---
+    const kitT = THREE.MathUtils.clamp((buildT - 0.02) / 0.07, 0, 1);
+    if (kitT >= 1) {
+      siteKit.visible = false;
+    } else {
+      siteKit.visible = true;
+      siteKit.position.y = -smooth(kitT) * 3;
     }
 
     // --- cranes ---
