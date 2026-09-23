@@ -2,14 +2,15 @@ export interface ResidenceProject {
   id: string;
   name: string;
   tagline: string;
-  silhouette: string;
   type: 'highrise' | 'courtyard' | 'villa';
   heightMeters: number;
   floorsCount: number;
   startingPrice: string;
   availability: string;
   completionDate: string;
-  description: string;
+  blurb: string;
+  /** 3D anchor: world position of the tower base center */
+  anchor: [number, number];
   floors: ResidenceFloor[];
 }
 
@@ -21,8 +22,8 @@ export interface ResidenceFloor {
   bedrooms: number;
   bathrooms: number;
   orientation: string;
-  ceilingHeight: string;
   price: string;
+  priceEUR: number;
   status: 'available' | 'reserved' | 'sold';
   features: string[];
   rooms: FloorPlanRoom[];
@@ -31,31 +32,31 @@ export interface ResidenceFloor {
 export interface FloorPlanRoom {
   id: string;
   name: string;
-  dimensions: string;
   areaSqm: number;
   finish: string;
-  position: [number, number, number];
-  size: [number, number, number];
-  color: string;
+  /** plan layout: [x, y] top-left in plan units, [w, d] size */
+  at: [number, number];
+  size: [number, number];
 }
+
+export type AmenityCategory = 'transit' | 'nature' | 'water' | 'culinary';
 
 export interface NeighborhoodPin {
   id: string;
   name: string;
-  category: 'transit' | 'nature' | 'water' | 'culinary' | 'culture';
+  short: string;
+  category: AmenityCategory;
   walkTime: string;
-  distance: string;
-  coordinates: [number, number, number];
-  description: string;
-  highlights: string[];
+  coordinates: [number, number];
 }
 
 export interface BuildPhase {
   number: string;
   code: string;
   title: string;
-  scrollRange: [number, number];
   elevation: string;
-  description: string;
-  technicalSpecs: string[];
 }
+
+export type SectionId = 'hero' | 'build' | 'residences' | 'district' | 'record' | 'contact';
+
+export type TimePreference = 'auto' | 'day' | 'golden' | 'night';
