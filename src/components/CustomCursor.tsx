@@ -1,83 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
+/**
+ * Drafting-reticle cursor. Fully imperative (transform + class writes),
+ * mounts once and never re-renders.
+ */
 export const CustomCursor: React.FC = () => {
-  const [pos, setPos] = useState({ x: -100, y: -100 });
-  const [isHovered, setIsHovered] = useState(false);
-  const [isClicking, setIsClicking] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const onMouseMove = (e: MouseEvent) => {
-      setPos({ x: e.clientX, y: e.clientY });
-      if (!isVisible) setIsVisible(true);
+    const root = rootRef.current;
+    const ring = ringRef.current;
+    const dot = dotRef.current;
+    if (!root || !ring || !dot) return;
 
-      const target = e.target as HTMLElement | null;
-      if (
-        target?.closest('button') ||
-        target?.closest('a') ||
-        target?.closest('input') ||
-        target?.closest('select') ||
-        target?.closest('textarea') ||
-        target?.closest('[data-interactive="true"]')
-      ) {
-        setIsHovered(true);
-      } else {
-        setIsHovered(false);
+    let x = -100;
+    let y = -100;
+    let rx = -100;
+    let ry = -100;
+    let visible = false;
+    let raf = 0;
+
+    const onMove = (e: MouseEvent) => {
+      x = e.clientX;
+      y = e.clientY;
+      if (!visible) {
+        visible = true;
+        root.style.opacity = '1';
       }
+      const t = e.target as HTMLElement | null;
+      const interactive = !!t?.closest('button, a, input, select, textarea, [data-interactive="true"]');
+      ring.className =
+        'absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-150 ease-out flex items-center justify-center ' +
+        (interactive
+          ? 'w-10 h-10 border border-[#E65100] bg-[#E65100]/10 rotate-45'
+          : 'w-6 h-6 border border-stone-500/50');
+      dot.className =
+        'absolute -translate-x-1/2 -translate-y-1/2 w-1 h-1 transition-colors ' +
+        (interactive ? 'bg-[#E65100]' : 'bg-stone-700');
+    };
+    const onDown = () => (ring.style.transform = 'translate(-50%,-50%) scale(0.7)');
+    const onUp = () => (ring.style.transform = 'translate(-50%,-50%) scale(1)');
+    const onLeave = () => {
+      visible = false;
+      root.style.opacity = '0';
     };
 
-    const onMouseDown = () => setIsClicking(true);
-    const onMouseUp = () => setIsClicking(false);
-    const onMouseLeave = () => setIsVisible(false);
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      rx += (x - rx) * 0.22;
+      ry += (y - ry) * 0.22;
+      root.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+    };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('mouseleave', onMouseLeave);
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+    document.documentElement.addEventListener('mouseleave', onLeave);
+    loop();
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('mouseleave', onMouseLeave);
+      cancelAnimationFrame(raf);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup', onUp);
+      document.documentElement.removeEventListener('mouseleave', onLeave);
     };
-  }, [isVisible]);
-
-  if (!isVisible) return null;
+  }, []);
 
   return (
-    <div
-      className="fixed pointer-events-none z-50 transition-transform duration-75 ease-out hidden md:block"
-      style={{
-        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
-        left: 0,
-        top: 0,
-      }}
-    >
-      {/* Central drafting dot */}
-      <div
-        className={`w-1.5 h-1.5 -ml-[3px] -mt-[3px] rounded-full transition-colors duration-150 ${
-          isHovered ? 'bg-[#E65100] scale-150' : 'bg-stone-800'
-        }`}
-      />
-
-      {/* Crosshair drafting reticle */}
-      <div
-        className={`absolute -translate-x-1/2 -translate-y-1/2 border transition-all duration-200 ease-out flex items-center justify-center ${
-          isHovered
-            ? 'w-10 h-10 border-[#E65100] bg-[#E65100]/10 rotate-45'
-            : isClicking
-            ? 'w-4 h-4 border-stone-800 scale-90'
-            : 'w-6 h-6 border-stone-500/40'
-        }`}
-      >
-        <span className="absolute -top-1 -left-1 w-1 h-1 border-t border-l border-stone-600" />
-        <span className="absolute -top-1 -right-1 w-1 h-1 border-t border-r border-stone-600" />
-        <span className="absolute -bottom-1 -left-1 w-1 h-1 border-b border-l border-stone-600" />
-        <span className="absolute -bottom-1 -right-1 w-1 h-1 border-b border-r border-stone-600" />
-      </div>
+    <div ref={rootRef} className="fixed top-0 left-0 z-[60] pointer-events-none opacity-0 hidden md:block" style={{ willChange: 'transform' }}>
+      <div ref={dotRef} className="absolute -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-stone-700" />
+      <div ref={ringRef} className="absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 border border-stone-500/50 transition-all duration-150 ease-out" />
     </div>
   );
 };
